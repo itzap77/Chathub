@@ -3,6 +3,7 @@ from typing import List, Optional
 
 from .config import HISTORY_LIMIT
 from .db import get_conn
+from .utils import encrypt_text, decrypt_text
 
 
 async def is_user_banned(room_id: str, username: str):
@@ -36,12 +37,27 @@ async def save_message(
     reply_to_text: Optional[str] = None,
     is_read: int = 0
 ) -> int:
+    # Encrypt main message text and quote reply text before saving in database
+    encrypted_text = encrypt_text(text) if text else None
+    encrypted_reply_to_text = encrypt_text(reply_to_text) if reply_to_text else None
+
     async with get_conn() as conn:
         cursor = await conn.execute(
             """INSERT INTO messages 
                (room_id, sender, recipient, text, filename, original_name, reply_to_id, reply_to_sender, reply_to_text, is_read, created_at) 
                VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?)""",
-            (room_id, sender, text, filename, original_name, reply_to_id, reply_to_sender, reply_to_text, is_read, time.time()),
+            (
+                room_id,
+                sender,
+                encrypted_text,
+                filename,
+                original_name,
+                reply_to_id,
+                reply_to_sender,
+                encrypted_reply_to_text,
+                is_read,
+                time.time()
+            ),
         )
         await conn.commit()
         return cursor.lastrowid
@@ -80,13 +96,13 @@ async def load_history(room_id: str, limit: int = HISTORY_LIMIT):
             "id": r[0],
             "sender": r[1],
             "sender_display": display_names.get(r[1]),
-            "text": r[2],
+            "text": decrypt_text(r[2]),  # Decrypt main message text for the client
             "filename": r[3],
             "original_name": r[4],
             "reply_to": {
                 "id": r[5],
                 "sender": r[6],
-                "text": r[7]
+                "text": decrypt_text(r[7])  # Decrypt reply preview text
             } if r[5] else None,
             "is_read": r[8],
             "timestamp": r[9]
