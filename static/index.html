@@ -417,6 +417,15 @@
           <div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>
         </div>
 
+        <!-- Live File Upload Progress Indicator -->
+        <div id="uploadStatusContainer" style="display:none;padding:8px 12px;margin:6px 12px;background:rgba(0,0,0,0.35);border-radius:8px;border:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--muted);margin-bottom:5px">
+            <span id="uploadFileName">Uploading file...</span>
+            <span id="uploadPercentage" style="font-weight:600;color:var(--accent,#5865f2)">0%</span>
+          </div>
+          <progress id="uploadProgressBar" value="0" max="100" style="width:100%;height:6px;border-radius:4px;overflow:hidden;accent-color:var(--accent,#5865f2);display:block"></progress>
+        </div>
+
         <div class="reply-dock" id="replyDock">
           <div style="display:flex;align-items:center;gap:8px;min-width:0">
             <span style="color:var(--text)">↩</span>
